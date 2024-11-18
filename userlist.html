@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Task Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/e408883647.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-light-gray-50">
+    <header class="max-w-7xl mx-auto my-8 bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-2xl p-8 rounded-lg">
+        <div class="flex justify-center items-center">
+            <h1 class="text-4xl font-semibold text-center">My <span class="text-yellow-500">Task</span> Manager</h1>
+        </div>
+    </header>
+
+    <section id="task-list-container" class="bg-gray-100 py-16">
+        <div class="max-w-screen-xl mx-auto px-4">
+            <div class="flex justify-end mb-10">
+                <a href="index.html" class="text-3xl font-medium text-red-500 cursor-pointer hover:text-red-400">Go Back to Users</a>
+            </div>
+
+            <div id="task-info-box" class="w-full bg-blue-50 rounded-lg p-10 shadow-xl">
+                <h3 class="text-2xl font-bold text-center text-gray-700">Your Task Overview</h3>
+                <div id="user-overview" class="text-center mb-8"></div>
+            </div>
+
+            <div class="flex gap-6 mb-8">
+                <input id="task-input" type="text" class="input input-bordered input-indigo w-full" placeholder="Enter a task..." />
+                <i onclick="addNewTaskToList()" class="fa-solid fa-plus text-3xl text-indigo-600 cursor-pointer hover:text-indigo-500"></i>
+            </div>
+
+            <div class="mt-8 h-[380px] overflow-y-auto bg-white rounded-lg shadow-lg p-6">
+                <ul id="tasks-display" class="space-y-4">
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <script>
+    const userIdParam = new URLSearchParams(window.location.search).get('userId');
+    const fetchUserInformation = () => {
+            fetch(`https://jsonplaceholder.typicode.com/users/${userIdParam}`)
+                .then(response => response.json())
+                .then(userData => {
+                    renderUserInfo(userData);
+                    fetchUserTasks();
+                });
+        };
+    const renderUserInfo = (user) => {
+            const userDetailBox = document.getElementById('user-overview');
+            userDetailBox.innerHTML = `
+                <h2 class="text-xl font-light">${user.name}</h2>
+                <p class="text-lg font-light">${user.email} | ${user.address.city}</p>
+            `;
+        };
+    const fetchUserTasks = () => {
+            fetch(`https://jsonplaceholder.typicode.com/todos?userId=${userIdParam}`)
+                .then(response => response.json())
+                .then(tasksData => {
+                    displayTaskList(tasksData);
+                });
+        };
+    const displayTaskList = (tasks) => {
+            const taskListContainer = document.getElementById('tasks-display');
+            taskListContainer.innerHTML = '';
+            tasks.forEach(task => {
+                const taskElement = document.createElement('li');
+                taskElement.classList = `bg-${task.completed ? 'green' : 'red'}-500 list-none rounded-xl text-lg font-medium py-4 px-8 mb-5 flex justify-between items-center ${task.completed ? 'line-through text-gray-600' : 'text-white'}`;
+                taskElement.innerHTML = `
+                    ${task.title}
+                    <p onclick="toggleTaskStatus(this)">
+                        <i class="fa-solid fa-check text-3xl ${task.completed ? 'text-black' : 'text-white'}"></i>
+                    </p>
+                `;
+                taskListContainer.appendChild(taskElement);
+            });
+        };
+    const toggleTaskStatus = (element) => {
+            const taskItem = element.closest('li');
+            taskItem.classList.toggle('line-through');
+            taskItem.classList.toggle('bg-green-500');
+            taskItem.classList.toggle('bg-red-500');
+        };
+    const addNewTaskToList = () => {
+        const newTaskInput = document.getElementById('task-input');
+        const newTaskText = newTaskInput.value.trim();
+            if (newTaskText === "") return;
+
+        const taskListContainer = document.getElementById('tasks-display');
+        const newTaskElement = document.createElement('li');
+            newTaskElement.classList = 'bg-teal-500 list-none rounded-xl text-lg font-medium py-4 px-8 mb-5 flex justify-between items-center text-white';
+            newTaskElement.innerHTML = `
+                ${newTaskText}
+                <p onclick="toggleTaskStatus(this)">
+                    <i class="fa-solid fa-check text-3xl text-white"></i>
+                </p>
+            `;
+            taskListContainer.insertBefore(newTaskElement, taskListContainer.firstChild);
+            newTaskInput.value = '';
+        };
+    fetchUserInformation(); 
+    </script>
+</body>
+
+</html>
